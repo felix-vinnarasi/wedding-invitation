@@ -1,0 +1,546 @@
+/* =========================================================
+   Lourdu Felix & Vinnarasi — wedding invitation
+   Tailwind utilities live in css/tailwind.css (compiled).
+   This file holds tokens, the cinematic hero, and the
+   effects Tailwind can't express.
+========================================================= */
+
+:root {
+  --cream: #fffaf2;
+  --gold: #d8b36a;
+  --gold-deep: #8a6820; /* gold for text on light backgrounds (4.8:1) */
+  --dark: #182b38;
+  --ink: #0a1622;
+  --ink-deep: #050d16;
+  --gold-grad: linear-gradient(135deg, #f3dfae 0%, #d8b36a 45%, #b98c3e 100%);
+  --gallery-gap: 2rem;
+  --nav-h: 76px;
+}
+
+@media (min-width: 768px) {
+  :root { --gallery-gap: 4rem; }
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--nav-h);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Montserrat', system-ui, sans-serif;
+  background: var(--cream);
+  color: var(--dark);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+
+/* ---------- accessibility helpers ---------- */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.skip-link {
+  position: fixed; top: -100px; left: 16px; z-index: 300;
+  background: var(--ink); color: var(--gold);
+  padding: 10px 18px; border: 1px solid var(--gold); border-radius: 999px;
+  font-size: 13px; transition: top 0.2s ease;
+}
+.skip-link:focus { top: 12px; }
+.font-tamil { font-family: 'Noto Serif Tamil', 'Latha', serif; font-size: 0.9em; }
+.text-gold-grad {
+  background: var(--gold-grad);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 4px 14px rgba(216, 179, 106, 0.35));
+}
+
+/* ---------- reveal states (only hidden when JS is running) ---------- */
+.js .reveal { opacity: 0; transform: translateY(32px); }
+.js .reveal-left { transform: translateX(-48px); }
+.js .reveal-right { transform: translateX(48px); }
+.js .reveal-pop { transform: scale(0.8); }
+.no-motion .reveal, .no-motion .balloon-text .ch,
+.no-motion .hero-reveal { opacity: 1 !important; transform: none !important; filter: none !important; }
+
+/* =========================================================
+   MUSIC CONTROL
+========================================================= */
+.music-toggle {
+  position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 110;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border: 1px solid rgba(216,179,106,.45); border-radius: 999px;
+  color: #fffaf2; background: rgba(2,7,13,.72);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  font: 500 10px/1 'Montserrat', sans-serif; letter-spacing: .16em; text-transform: uppercase;
+  transition: transform .3s ease, background .3s ease, border-color .3s ease, opacity .3s ease;
+}
+.music-toggle:hover { transform: translateY(-2px); border-color: rgba(216,179,106,.9); }
+.music-icon { font: 18px/1 'Cormorant Garamond', serif; color: #d8b36a; }
+.music-toggle.is-playing .music-icon { animation: musicPulse 1.1s ease-in-out infinite; }
+@keyframes musicPulse { 50% { transform: translateY(-2px) scale(1.12); } }
+
+/* =========================================================
+   NAVBAR
+========================================================= */
+.navbar {
+  position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+  padding: calc(22px + env(safe-area-inset-top, 0px)) max(5vw, env(safe-area-inset-right, 0px)) 22px max(5vw, env(safe-area-inset-left, 0px));
+  transition: background 0.5s ease, padding 0.5s ease, backdrop-filter 0.5s ease, box-shadow 0.5s ease;
+}
+.navbar.scrolled {
+  padding-top: calc(12px + env(safe-area-inset-top, 0px)); padding-bottom: 12px;
+  background: rgba(255, 252, 247, 0.9);
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  box-shadow: 0 1px 0 rgba(216, 179, 106, 0.35), 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 500;
+  letter-spacing: 0.18em; color: #fff; transition: color 0.4s ease;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+}
+.navbar.scrolled .nav-logo { color: var(--dark); text-shadow: none; }
+.navbar.scrolled #menuBtn,
+.navbar.menu-open .nav-logo,
+.navbar.menu-open #menuBtn { color: var(--dark); text-shadow: none; }
+
+.nav-links a {
+  position: relative; color: #fff; font-size: 11px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase; padding: 6px 0;
+  transition: color 0.4s ease; text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+}
+.navbar.scrolled .nav-links a { color: var(--dark); text-shadow: none; }
+.nav-links a::after {
+  content: ''; position: absolute; left: 0; bottom: 0; width: 0; height: 1px;
+  background: currentColor; transition: width 0.4s ease;
+}
+.nav-links a:hover::after, .nav-links a:focus-visible::after, .nav-links a.active::after { width: 100%; }
+
+.mobile-menu-bg {
+  background: url('assets/img/menu-bg.webp') center / cover no-repeat;
+}
+#mobileMenu { padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0); }
+
+/* =========================================================
+   HERO (pinned)
+========================================================= */
+.scroll-transition-wrapper {
+  position: relative; width: 100%; height: 100vh; height: 100svh;
+  min-height: 520px; overflow: visible; background: transparent;
+}
+/* Kept in the DOM for compatibility; the cinematic transition no longer uses a
+   black curtain. */
+.scroll-ink-transition {
+  position: absolute; inset: 0; z-index: 1;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+.hero {
+  position: relative; width: 100%; height: 100vh; height: 100svh;
+  min-height: 520px; overflow: hidden; z-index: 4;
+  display: flex; align-items: center; justify-content: center;
+  /* Keep the pinned hero rendered while the scrubbed transition reverses.
+     #story (z-index: 6) covers it after the reveal is complete. */
+  opacity: 1 !important;
+}
+.hero-image {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 40%; will-change: transform;
+}
+/* cinematic grade: soft vignette + warm lift at the horizon */
+.hero-overlay {
+  position: absolute; inset: 0; z-index: 2;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(0, 24, 42, 0.1) 0%, rgba(0, 18, 34, 0.55) 100%),
+    linear-gradient(180deg, rgba(0, 20, 38, 0.35) 0%, rgba(0, 24, 42, 0.2) 45%, rgba(0, 12, 24, 0.55) 100%);
+}
+#lantern-container { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 3; }
+.lantern {
+  position: absolute; height: auto; object-fit: contain; will-change: transform;
+  user-select: none; filter: drop-shadow(0 0 12px rgba(255, 190, 100, 0.35));
+}
+
+.hero-content {
+  position: relative; z-index: 10; width: 100%; max-width: 100%; height: 100%;
+  padding: calc(var(--nav-h) + 8px) 20px 90px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  text-align: center; color: #fff; perspective: 1000px;
+}
+.hero-title {
+  display: flex; flex-direction: column; align-items: center; font-weight: 400;
+  text-shadow: 0 2px 30px rgba(0, 12, 24, 0.55);
+}
+.hero-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(40px, min(6.6vw, 13vh), 108px);
+  font-weight: 400; line-height: 1; letter-spacing: 0.06em;
+  display: flex; flex-wrap: wrap; justify-content: center; column-gap: 0.32em; row-gap: 0.08em;
+  max-width: 100%;
+}
+.hero-name .word { display: inline-flex; white-space: nowrap; }
+.balloon-text .ch {
+  display: inline-block; will-change: transform, opacity, filter;
+}
+.js .balloon-text .ch { opacity: 0; transform: translate3d(0, 120px, 0) rotateX(35deg) scale(0.8); filter: blur(8px); }
+
+.hero-weds {
+  display: block; margin: clamp(10px, 2vh, 20px) 0; font-size: 13px; font-weight: 500;
+  letter-spacing: 0.45em; padding-left: 0.45em;
+}
+.hero-small {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.4em; text-transform: uppercase;
+  margin-bottom: clamp(12px, 3vh, 28px); padding-left: 0.4em;
+}
+.js .hero-small { opacity: 0; transform: translateY(60px); filter: blur(6px); }
+.js .hero-weds { opacity: 0; transform: translateY(60px) scale(0.8); filter: blur(6px); }
+.js .ornament { opacity: 0; transform: translateY(60px) scale(0.7); filter: blur(5px); }
+.ornament { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: clamp(14px, 3vh, 30px); }
+.ornament-line { width: clamp(40px, 10vw, 80px); height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85)); }
+.ornament-line:last-child { background: linear-gradient(90deg, rgba(255, 255, 255, 0.85), transparent); }
+.cross { font-family: 'Cormorant Garamond', serif; font-size: 32px; color: #ffe5a2; text-shadow: 0 0 18px rgba(255, 214, 140, 0.6); }
+
+.scroll-indicator {
+  position: absolute; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); left: 50%;
+  transform: translateX(-50%); z-index: 20; display: flex; flex-direction: column; align-items: center; color: #fff;
+}
+.scroll-text { font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 10px; padding-left: 0.4em; }
+.scroll-line { width: 1px; height: 48px; background: rgba(255, 255, 255, 0.35); overflow: hidden; position: relative; }
+.scroll-line::after {
+  content: ''; position: absolute; top: -100%; left: 0; width: 100%; height: 100%;
+  background: #fff; animation: scrollLine 2s ease-in-out infinite;
+}
+@keyframes scrollLine { 0% { top: -100%; } 50% { top: 0; } 100% { top: 100%; } }
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .hero-small, .scroll-indicator { display: none; }
+  .hero-content { padding-bottom: 20px; }
+}
+
+/* =========================================================
+   CINEMATIC SECTION BACKGROUNDS
+========================================================= */
+.timeline-section, .reception-section {
+  isolation: isolate;
+}
+.section-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-position: center; background-size: cover; background-repeat: no-repeat;
+  transform: scale(1.04);
+  will-change: transform;
+}
+.timeline-photo-bg {
+  background-image: url("assets//img/wedding-timeline-bg.webp");
+  background-position: center 42%;
+}
+.reception-photo-bg {
+  background-image: url("https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=2000&q=82");
+  background-position: center 48%;
+}
+.section-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  /* background: linear-gradient(180deg, rgba(250,248,245,.91) 0%, rgba(250,248,245,.82) 48%, rgba(250,248,245,.94) 100%); */
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(1px);
+}
+.reception-section .section-photo-overlay {
+  background: linear-gradient(180deg, rgba(255,250,242,.90) 0%, rgba(255,250,242,.78) 48%, rgba(255,250,242,.92) 100%);
+}
+.timeline-section > .max-w-\[1100px\], .reception-section > .max-w-\[1200px\] {
+  position: relative; z-index: 2;
+}
+.timeline-section .timeline-item > div:last-child > div,
+.reception-section .photo-frame {
+  box-shadow: 0 18px 50px rgba(24,43,56,.18);
+}
+
+/* =========================================================
+   STORY
+========================================================= */
+.intro { position: relative; z-index: 6; min-height: 100vh; min-height: 100svh; background: var(--ink-deep); isolation: isolate; will-change: clip-path; }
+.intro-section-bg {
+  position: absolute; left: 0; top: -8%; width: 100%; height: 116%;
+  object-fit: cover; z-index: 0; will-change: transform;
+}
+.intro-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background:
+    radial-gradient(ellipse at center, rgba(5, 13, 22, 0.35) 0%, rgba(5, 13, 22, 0.75) 100%),
+    rgba(5, 13, 22, 0.35);
+}
+/* blends the pinned hero's dark end-state into the cathedral photo, and out into the countdown */
+.intro-vignette {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(180deg, rgba(5, 13, 22, 0.10) 0%, rgba(5, 13, 22, 0) 18%);
+}
+.glass-card {
+  background-color: rgba(10, 22, 34, 0.72);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 38%);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+.glass-card:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 20px 50px rgba(216, 179, 106, 0.2); }
+.portrait-frame { box-shadow: 0 0 0 5px rgba(216, 179, 106, 0.08), 0 18px 40px rgba(0, 0, 0, 0.45); }
+.couple-center { position: relative; }
+
+/* =========================================================
+   TEXTURE & PHOTOS
+========================================================= */
+.grain::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  opacity: 0.07; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.photo-frame {
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(216, 179, 106, 0.55), 0 0 0 10px #fffaf2, 0 0 0 11px rgba(216, 179, 106, 0.35), 0 28px 60px rgba(24, 43, 56, 0.2);
+}
+.btn-outline { display: inline-flex; align-items: center; border-radius: 999px; }
+
+/* =========================================================
+   GALLERY / SWIPER
+   Original gold geometric hexagon frame preserved.
+========================================================= */
+#gallery { position: relative; }
+.gallery-slider-wrap { position: static; padding: 0 42px; }
+.gallery-swiper { overflow: visible; }
+.gallery-slide { height: auto; display: flex; justify-content: center; align-items: center; }
+.gallery-lightbox {
+  display: block; width: fit-content; max-width: 100%; text-decoration: none;
+  color: inherit;
+}
+.gallery-card {
+  position: relative;
+  width: 240px;
+  height: 280px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  isolation: isolate;
+}
+.gallery-card .hex-clip {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: #0a1622;
+  z-index: 1;
+}
+.gallery-card img {
+  width: 100%; height: 100%; display: block; object-fit: cover;
+  transition: transform .7s cubic-bezier(.2,.65,.2,1);
+}
+.gallery-lightbox:hover .gallery-card img,
+.gallery-lightbox:focus-visible .gallery-card img { transform: scale(1.05); }
+
+/* Fullscreen hint: visible only when the individual photo is hovered/focused. */
+.gallery-card::after {
+  content: "VIEW";
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translate(-50%, 8px);
+  z-index: 8;
+  padding: 7px 12px;
+  border: 1px solid rgba(216,179,106,.72);
+  border-radius: 999px;
+  background: rgba(5,12,18,.62);
+  color: #fffaf2;
+  font: 600 8px/1 Montserrat, sans-serif;
+  letter-spacing: .2em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease;
+  backdrop-filter: blur(4px);
+}
+.gallery-lightbox:hover .gallery-card::after,
+.gallery-lightbox:focus-visible .gallery-card::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.gallery-card .hex-clip > div { z-index: 2; pointer-events: none; }
+.gallery-card > div:first-child {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+  z-index: 5;
+}
+.gallery-card > div:first-child svg {
+  overflow: visible;
+  filter: drop-shadow(0 0 1px rgba(216,179,106,.2));
+}
+
+@media (min-width: 768px) {
+  .gallery-card { width: 320px; height: 370px; }
+}
+
+@media (max-width: 767px) {
+  .gallery-slider-wrap { padding: 0 30px; }
+  .gallery-card { width: 240px; height: 280px; }
+  .gallery-card > div:first-child { inset: -14px; }
+  .gallery-nav { top: 18px; width: 40px; height: 40px; }
+  .gallery-prev { right: 66px; }
+  .gallery-next { right: 18px; }
+  .gallery-card::after { bottom: 16px; font-size: 7px; padding: 6px 10px; }
+}
+
+.gallery-nav {
+  position: absolute;
+  top: -35%;
+  transform: translateY(50%);
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  border: 1px solid rgba(216,179,106,.65);
+  border-radius: 999px;
+  background: rgba(5,12,18,.72);
+  color: #fffaf2;
+  font: 500 18px/1 Montserrat, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 8px 26px rgba(0,0,0,.18);
+  transition: background .25s ease, border-color .25s ease, transform .25s ease, opacity .25s ease;
+  backdrop-filter: blur(5px);
+}
+.gallery-nav:hover { background:rgba(216,179,106,.18); border-color:#d8b36a; transform: translateY(-1px); }
+.gallery-nav:focus-visible { outline: 2px solid #d8b36a; outline-offset: 3px; }
+.gallery-nav:active { transform: translateY(0) scale(.96); }
+.gallery-prev { right: 82px; }
+.gallery-next { right: 28px; }
+.gallery-nav.swiper-button-disabled { opacity: .45; pointer-events: none; }
+.gallery-progress { height:1px; background:rgba(216,179,106,.18); margin:28px auto 0; max-width:420px; overflow:hidden; }
+.gallery-progress span { display:block; width:100%; height:100%; background:#d8b36a; transform-origin:left center; transform:scaleX(0); }
+.gallery-lightbox-popup .mfp-bg { background:#02070c; opacity:.97; }
+.gallery-lightbox-popup .mfp-close { color:#fffaf2; font-size:38px; opacity:.9; }
+.gallery-lightbox-popup .mfp-arrow { opacity:.9; }
+.gallery-lightbox-popup .mfp-img { box-shadow:0 24px 80px rgba(0,0,0,.5); }
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .scroll-line::after { animation: none; top: 0; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
+}
+
+@media (max-width: 640px) {
+  .music-toggle { right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 9px 11px; }
+  .music-label { display: none; }
+}
+
+
+/* =========================================================
+   MOBILE NAV OVERLAY — FIXED TO THE VIEWPORT
+   Keep the overlay outside the fixed navbar so browser
+   stacking/backdrop-filter behavior cannot clip it after scroll.
+========================================================= */
+.navbar {
+  z-index: 300;
+}
+#mobileMenu {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100svh;
+  z-index: 250 !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(var(--nav-h) + env(safe-area-inset-top, 0px) + 20px) 24px
+           calc(28px + env(safe-area-inset-bottom, 0px));
+}
+#mobileMenu[aria-hidden="true"] {
+  visibility: hidden;
+}
+#mobileMenu[aria-hidden="false"] {
+  visibility: visible;
+}
+#mobileMenu > nav {
+  width: 100%;
+  min-height: 100%;
+  justify-content: center;
+}
+@media (max-width: 1023px) {
+  .navbar.menu-open {
+    background: rgba(255, 250, 242, 0.96);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+  }
+  .navbar.menu-open .nav-logo,
+  .navbar.menu-open #menuBtn {
+    color: var(--dark);
+  }
+}
+
+/* =========================================================
+   STORY — STABLE VIEWPORT REVEAL
+========================================================= */
+.story-section {
+  min-height: 100svh;
+  min-height: 100dvh;
+  scroll-margin-top: 0;
+  overflow: hidden;
+}
+@media (max-width: 767px) {
+  .story-section {
+    min-height: 100svh;
+    padding-top: max(76px, 10svh);
+    padding-bottom: max(40px, 6svh);
+  }
+
+  .story-section > .relative.z-10 {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .story-section .couple-title-reveal {
+    margin-bottom: clamp(20px, 4svh, 34px);
+  }
+
+  .story-section .grid {
+    width: 100%;
+  }
+
+  .story-section .glass-card {
+    max-width: 290px;
+    margin-inline: auto;
+  }
+}
+
+/* When the story reveal is active, keep the photographic section as
+   one clean viewport rather than allowing the next section to peek in. */
+.story-section.story-reveal-active {
+  min-height: 100svh;
+}
+
+/* Prevent the document underneath the mobile overlay from moving. */
+html.menu-lock {
+  overflow: hidden;
+}
+body.menu-lock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Gallery navigation sizing on small screens (kept after base nav styles). */
+@media (max-width: 767px) {
+  .gallery-nav { top: 18px; width: 40px; height: 40px; }
+  .gallery-prev { right: 66px; }
+  .gallery-next { right: 18px; }
+}

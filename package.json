@@ -1,0 +1,14 @@
+{
+  "name": "wedding-invitation",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Lourdu Felix & Vinnarasi — Christian wedding invitation website",
+  "scripts": {
+    "build": "tailwindcss -c tailwind.config.js -i css/tailwind.src.css -o css/tailwind.css --minify",
+    "watch": "tailwindcss -c tailwind.config.js -i css/tailwind.src.css -o css/tailwind.css --watch",
+    "serve": "npx serve ."
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}
