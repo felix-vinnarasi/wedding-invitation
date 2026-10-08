@@ -20,113 +20,137 @@
   // ==========================================
   // ==========================================
   // WEDDING MUSIC
+  // 1. Scroll down  -> try to start audible music.
+  // 2. Browser blocks it (scroll is NOT a user gesture) -> keep trying on every
+  //    scroll, and finish the job on the very first tap / click / key press.
+  // 3. Choice + position are remembered with localStorage / sessionStorage.
   // ==========================================
   const weddingAudio = document.getElementById('weddingAudio');
   const musicToggle = document.getElementById('musicToggle');
-  let musicUserPaused = false;
-  let musicStarted = false;
-  let musicUnlocked = false;
+
+  const MUSIC_PREF_KEY = 'wedding-music-pref';   // localStorage: 'on' | 'off'
+  const MUSIC_TIME_KEY = 'wedding-music-time';   // sessionStorage: seconds
+  const store = {
+    get(area, key) { try { return window[area].getItem(key); } catch (e) { return null; } },
+    set(area, key, val) { try { window[area].setItem(key, val); } catch (e) { /* private mode */ } },
+  };
+
+  let musicUserPaused = store.get('localStorage', MUSIC_PREF_KEY) === 'off';
+  let musicAudible = false;
+  let musicAttempting = false;
 
   function setMusicState(playing) {
     if (!musicToggle) return;
     musicToggle.classList.toggle('is-playing', playing);
+    if (playing) musicToggle.classList.remove('needs-tap');
     musicToggle.setAttribute('aria-pressed', String(playing));
     musicToggle.setAttribute('aria-label', playing ? 'Pause wedding music' : 'Play wedding music');
   }
 
+  // Muted autoplay is always allowed; it keeps the element "warm" so it can be
+  // made audible instantly later.
   async function primeMusicMuted() {
-    if (!weddingAudio || musicUserPaused || musicStarted) return false;
+    if (!weddingAudio || musicUserPaused || !weddingAudio.paused) return;
     try {
       weddingAudio.muted = true;
-      weddingAudio.volume = 0;
       await weddingAudio.play();
-      musicStarted = true;
-      return true;
-    } catch (error) {
-      return false;
-    }
+    } catch (e) { /* fully blocked: wait for a gesture */ }
   }
 
   async function startWeddingMusic() {
-    if (!weddingAudio || musicUserPaused) return false;
+    if (!weddingAudio || musicUserPaused || musicAudible || musicAttempting) return musicAudible;
+    musicAttempting = true;
     try {
       if (weddingAudio.readyState === HTMLMediaElement.HAVE_NOTHING) weddingAudio.load();
       weddingAudio.muted = false;
       weddingAudio.volume = 0.55;
-      if (weddingAudio.paused) await weddingAudio.play();
-      musicStarted = true;
-      musicUnlocked = true;
+      await weddingAudio.play();
+      musicAudible = true;
+      store.set('localStorage', MUSIC_PREF_KEY, 'on');
       setMusicState(true);
-      return true;
-    } catch (error) {
+      detachMusicTriggers();
+    } catch (e) {
+      // Blocked. Chrome pauses an element unmuted without a gesture, so go back
+      // to muted playback and wait for the next scroll / tap.
+      musicAudible = false;
       setMusicState(false);
-      return false;
+      musicToggle?.classList.add('needs-tap');
+      primeMusicMuted();
+    } finally {
+      musicAttempting = false;
     }
+    return musicAudible;
+  }
+
+  // Scroll-type triggers: may be rejected by the browser, so they just retry.
+  // Gesture-type triggers: always count as user activation, so they succeed.
+  const scrollTriggers = [];
+  const gestureTriggers = [];
+  function on(list, target, type, handler, opts) {
+    target.addEventListener(type, handler, opts);
+    list.push(() => target.removeEventListener(type, handler, opts));
+  }
+  function detachMusicTriggers() {
+    [...scrollTriggers, ...gestureTriggers].forEach((off) => off());
+    scrollTriggers.length = gestureTriggers.length = 0;
   }
 
   if (weddingAudio) {
-    weddingAudio.addEventListener('play', () => {
-      musicStarted = true;
-      setMusicState(!weddingAudio.muted && weddingAudio.volume > 0);
-    });
+    weddingAudio.addEventListener('play', () => setMusicState(musicAudible && !weddingAudio.muted));
     weddingAudio.addEventListener('pause', () => setMusicState(false));
-    weddingAudio.addEventListener('ended', () => setMusicState(false));
 
-    // Muted autoplay is allowed by browsers. This primes the audio so the
-    // first scroll can make it audible without requiring a button click.
+    // Resume where this visit left off (e.g. after refresh).
+    const savedTime = parseFloat(store.get('sessionStorage', MUSIC_TIME_KEY));
+    if (savedTime > 0) {
+      weddingAudio.addEventListener('loadedmetadata', () => {
+        if (savedTime < weddingAudio.duration) weddingAudio.currentTime = savedTime;
+      }, { once: true });
+    }
+    let lastSave = 0;
+    weddingAudio.addEventListener('timeupdate', () => {
+      const now = Date.now();
+      if (now - lastSave > 1000) { lastSave = now; store.set('sessionStorage', MUSIC_TIME_KEY, weddingAudio.currentTime); }
+    });
+    window.addEventListener('pagehide', () => store.set('sessionStorage', MUSIC_TIME_KEY, weddingAudio.currentTime));
+
     primeMusicMuted();
 
-    let scrollActivationAttempted = false;
-    const makeAudibleFromScroll = () => {
-      if (musicUserPaused || scrollActivationAttempted) return;
-      scrollActivationAttempted = true;
-      startWeddingMusic();
-    };
+    if (!musicUserPaused) {
+      const passive = { passive: true };
+      const cap = { passive: true, capture: true };
+      const fromToggle = (e) => musicToggle?.contains(e.target);
 
-    // Desktop wheel: scrolling down should make the already-playing muted
-    // audio audible. Browsers may reject audible autoplay from wheel alone,
-    // so the muted priming above is what makes this reliable where supported.
-    window.addEventListener('wheel', (event) => {
-      if (event.deltaY > 0) makeAudibleFromScroll();
-    }, { passive: true });
+      // --- scroll-down triggers ---
+      on(scrollTriggers, window, 'wheel', (e) => { if (e.deltaY > 0) startWeddingMusic(); }, passive);
+      on(scrollTriggers, window, 'scroll', () => { if (window.scrollY > 20) startWeddingMusic(); }, passive);
+      let touchY = null;
+      on(scrollTriggers, window, 'touchstart', (e) => { touchY = e.touches?.[0]?.clientY ?? null; }, cap);
+      on(scrollTriggers, window, 'touchmove', (e) => {
+        const y = e.touches?.[0]?.clientY;
+        if (touchY !== null && typeof y === 'number' && touchY - y > 2) startWeddingMusic();
+      }, cap);
 
-    // Touch/pointer: first downward gesture is also used as the activation.
-    let touchStartY = null;
-    window.addEventListener('touchstart', (event) => {
-      if (musicToggle?.contains(event.target)) return;
-      touchStartY = event.touches?.[0]?.clientY ?? null;
-    }, { passive: true, capture: true });
-
-    window.addEventListener('touchmove', (event) => {
-      if (musicToggle?.contains(event.target) || touchStartY === null) return;
-      const currentY = event.touches?.[0]?.clientY;
-      if (typeof currentY === 'number' && touchStartY - currentY > 2) makeAudibleFromScroll();
-    }, { passive: true, capture: true });
-
-    window.addEventListener('pointerdown', (event) => {
-      if (musicToggle?.contains(event.target)) return;
-      // A real pointer gesture is a stronger browser user-activation signal.
-      if (!musicUserPaused && weddingAudio.muted) startWeddingMusic();
-    }, { passive: true, capture: true });
-
-    window.addEventListener('keydown', () => {
-      if (!musicUserPaused && weddingAudio.muted) startWeddingMusic();
-    }, { passive: true });
-
-    if (musicToggle) {
-      musicToggle.addEventListener('click', async () => {
-        if (weddingAudio.paused || weddingAudio.muted) {
-          musicUserPaused = false;
-          scrollActivationAttempted = true;
-          await startWeddingMusic();
-        } else {
-          musicUserPaused = true;
-          weddingAudio.pause();
-          weddingAudio.muted = false;
-          setMusicState(false);
-        }
-      });
+      // --- real user-gesture fallbacks (guaranteed to be allowed) ---
+      ['pointerdown', 'touchend', 'click'].forEach((type) =>
+        on(gestureTriggers, window, type, (e) => { if (!fromToggle(e)) startWeddingMusic(); }, cap));
+      on(gestureTriggers, window, 'keydown', () => startWeddingMusic(), passive);
     }
+
+    musicToggle?.addEventListener('click', async () => {
+      if (musicAudible && !weddingAudio.paused) {
+        musicUserPaused = true;
+        musicAudible = false;
+        weddingAudio.pause();
+        store.set('localStorage', MUSIC_PREF_KEY, 'off');
+        setMusicState(false);
+        detachMusicTriggers();
+      } else {
+        musicUserPaused = false;
+        musicAudible = false;
+        store.set('localStorage', MUSIC_PREF_KEY, 'on');
+        await startWeddingMusic();
+      }
+    });
   }
 
   const navbar = $('#navbar');
@@ -552,7 +576,7 @@
       loop: true,
       speed: 600,
       spaceBetween: 22,
-      slidesPerView: 1.15,
+      slidesPerView: 1,
       centeredSlides: true,
       grabCursor: true,
       autoplay: {
@@ -565,7 +589,7 @@
         prevEl: '.gallery-prev',
       },
       breakpoints: {
-        640: { slidesPerView: 2.1, spaceBetween: 24 },
+        768: { slidesPerView: 2.1, spaceBetween: 24 },
         1024: { slidesPerView: 3.15, spaceBetween: 28 },
         1400: { slidesPerView: 3.55, spaceBetween: 32 },
       },
